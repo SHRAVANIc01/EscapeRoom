@@ -34,7 +34,7 @@ class Player:
 
     def playerMovement(self, keys):
         # handling player movement speed
-        # self.isMoving = True
+        self.isMoving = True
         if keys[pygame.K_UP]:
             self.player_y -= 5
         if keys[pygame.K_DOWN]:
