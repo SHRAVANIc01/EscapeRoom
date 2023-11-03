@@ -8,6 +8,7 @@ pygame.init()
 WIDTH, HEIGHT = 800, 600
 WHITE = (255, 255, 255)
 BLACK = (0,0,0)
+GREEN = (0,255,0)
 TREASURE_SIZE = 40
 PLAYER_SIZE = 20
 
@@ -31,6 +32,7 @@ class Player:
         self.which_anim = 0
         self.ut = 0
         self.isMoving = False
+        self.health = 100
 
     def playerMovement(self, keys):
         # handling player movement speed
@@ -67,6 +69,29 @@ class Player:
             self.which_anim = 0
 
         return frame
+    
+    def updateHealth(self, damage):
+        self.health -= damage
+        
+    def drawAttributes(self):
+        pygame.draw.rect(screen, GREEN, pygame.Rect(600,50,self.health,20))
+    
+class Trap:
+    def __init__(self, trapx, trapy, trapdamage):
+        self.x = trapx
+        self.y = trapy
+        self.damage = trapdamage
+        self.trapSize = 30
+        self.isDestroyed = False
+        
+    def drawTrap(self):
+        if not self.isDestroyed:
+            pygame.draw.rect(screen, BLACK,pygame.Rect(self.x,self.y,self.trapSize,self.trapSize))
+        
+    def trapActivation(self, player):
+        if pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE).colliderect(pygame.Rect(self.x,self.y,self.trapSize,self.trapSize)) and not self.isDestroyed:
+            player.updateHealth(self.damage)
+            self.isDestroyed = True
 
 # Creating the game window
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -87,6 +112,7 @@ spritesheet = SpriteSheet(pygame.image.load('amongus.png').convert_alpha())
 player = Player()
 player.manageAnimations()
 weight_sum = 0
+trap = Trap(100,100,30)
 
 # Game loop
 running = True
@@ -119,6 +145,11 @@ while running:
     # Draw the player
     # pygame.draw.rect(screen, (0, 0, 255), pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE))
     screen.blit(frame, (player.player_x,player.player_y))
+    player.drawAttributes()
+    
+    trap.drawTrap()
+    trap.trapActivation(player)
+    
 
     # Draw the treasures
     for treasure in treasures:
