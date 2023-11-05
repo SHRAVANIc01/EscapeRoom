@@ -10,7 +10,7 @@ WHITE = (255, 255, 255)
 BLACK = (0,0,0)
 GREEN = (0,255,0)
 TREASURE_SIZE = 40
-PLAYER_SIZE = 20
+PLAYER_SIZE = 30
 
 class SpriteSheet:
     def __init__(self, image):
@@ -103,26 +103,79 @@ class Trap:
             player.updateHealth(self.damage)
             self.isDestroyed = True
 
+class Treasure:
+    def __init__(self, trex, trey):
+        self.x = trex
+        self.y = trey
+        self.size = TREASURE_SIZE
+        self.weight = random.randint(10,50)
+        self.profit = random.randint(10,200)
+
+    def drawTreasures(self):
+        weighttext = font2.render(str(self.weight),True,(0,0,0))
+        profittext = font2.render(str(self.profit),True,(0,0,0))
+        pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(self.x, self.y, self.size, self.size))
+        screen.blit(weighttext, (self.x, self.y)) 
+        screen.blit(profittext, (self.x, self.y + 15)) 
+
+def checkCollision(keys):
+    global weight_sum
+    global profit_sum
+    global sc_no
+    if keys[pygame.K_e]:
+        for treasure in treasures:
+            if pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE).colliderect(pygame.Rect(treasure.x, treasure.y, TREASURE_SIZE, TREASURE_SIZE)):
+                collected_treasures.append(treasure)
+                weight_sum += treasure.weight
+                profit_sum += treasure.profit
+                treasures.remove(treasure)
+
+        if pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE).colliderect(pygame.Rect(door['x'],door['y'],door['size_x'],door['size_y'])):
+            if profit_sum == knapsack_ans:
+                print("game won")
+                sc_no = 2
+            else:
+                print("Wrong answer")
+
 # Creating the game window
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Treasure Hunt Game")
 
-# Define the treasures with random positions
-# treasures = [{"x": random.randint(0, WIDTH - TREASURE_SIZE), "y": random.randint(0, HEIGHT - TREASURE_SIZE)} for _ in range(5)]
-treasures = [{'x':200, 'y':100, 'weight':100},
-             {'x':300, 'y':200, 'weight':20},
-             {'x':100, 'y':300, 'weight':30},
-             {'x':500, 'y':400, 'weight':40}]
+# initializing all the treasures with random weights
+treasures = []
+t1 = Treasure(200,100)
+t2 = Treasure(300,100) 
+t3 = Treasure(400,100)
+t4 = Treasure(500,100)
+
+treasures.append(t1)
+treasures.append(t2)
+treasures.append(t3)
+treasures.append(t4)
+
+#solving knapsack problem
+wt = [t.weight for t in treasures]
+pt = [t.profit for t in treasures]
+
+knapsack_ans = solveKnapsackProblem(80, wt, pt, 4)
+print(knapsack_ans)
 
 # Initialize game variables
+sc_no = 1
 collected_treasures = []
 font = pygame.font.Font(None, 36)
+font2 = pygame.font.Font(None, 20)
+font3 = pygame.font.Font(None, 50)
 clock = pygame.time.Clock()
 spritesheet = SpriteSheet(pygame.image.load('amongus.png').convert_alpha())
 player = Player()
 player.manageAnimations()
 weight_sum = 0
+profit_sum = 0
 trap = Trap(100,100,30)
+
+#define game win point
+door = {'x':0, 'y':300, 'size_x':20, 'size_y':40}
 
 # Game loop
 if __name__ == '__main__':
@@ -134,50 +187,42 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
 
-        # Check for player input
-        frame = player.updateAnimations(dt)
-        keys = pygame.key.get_pressed()
-        player.playerMovement(keys)
+        if sc_no == 1:
+            # Check for player input
+            frame = player.updateAnimations(dt)
+            keys = pygame.key.get_pressed()
+            player.playerMovement(keys)
 
-        # Check for treasure collection
-        for treasure in treasures:
-            if pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE).colliderect(pygame.Rect(treasure["x"], treasure["y"], TREASURE_SIZE, TREASURE_SIZE)):
-                collected_treasures.append(treasure)
-                weight_sum += treasure['weight']
-                treasures.remove(treasure)
+            # Check for all collisions
+            checkCollision(keys)
 
-        # Clear the screen
-        screen.fill(WHITE)
+            # Clear the screen
+            screen.fill(WHITE)
 
-        if weight_sum == 120:
-            wintxt = font.render("Game Won", True, (0,0,0))
-            screen.blit(wintxt, (10, 10))
+            # Draw the player
+            screen.blit(frame, (player.player_x,player.player_y))
+            player.drawAttributes()
+            
+            trap.drawTrap()
+            trap.trapActivation(player)
+            
+            # Draw the treasures
+            for treasure in treasures:
+                treasure.drawTreasures()
+                
+            # Draw collected treasures
+            wt_text = font.render("Weights: " + str(weight_sum), True, (0, 0, 0))
+            pt_text = font.render("Profit: " + str(profit_sum), True, (0, 0, 0))
+            screen.blit(wt_text, (10, 10))
+            screen.blit(pt_text, (10, 30))
+            
+            #draw the win point, i.e., the exit door
+            pygame.draw.rect(screen, (0,125,125), pygame.Rect(door['x'], door['y'], 20,40))
 
-<<<<<<< HEAD
-        # Draw the player
-        # pygame.draw.rect(screen, (0, 0, 255), pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE))
-        screen.blit(frame, (player.player_x,player.player_y))
-=======
-    # Draw the player
-    # pygame.draw.rect(screen, (0, 0, 255), pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE))
-    screen.blit(frame, (player.player_x,player.player_y))
-    player.drawAttributes()
-    
-    trap.drawTrap()
-    trap.trapActivation(player)
-    
->>>>>>> a6762d3fc9965e818744a6c07635a9e2090264d5
-
-        # Draw the treasures
-        for treasure in treasures:
-            w = treasure['weight']
-            weighttext = font.render(str(w),False,(0,0,0))
-            pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(treasure["x"], treasure["y"], TREASURE_SIZE, TREASURE_SIZE))
-            screen.blit(weighttext, (treasure["x"], treasure["y"])) 
-
-        # Draw collected treasures
-        # text = font.render("Collected Treasures: " + str(len(collected_treasures)), True, (0, 0, 0))
-        # screen.blit(text, (10, 10))
+        if sc_no == 2:
+            screen.fill(WHITE)
+            wintxt = font3.render("Game Won", True, (0,0,0))
+            screen.blit(wintxt, (300, 250))
 
         # Update the display
         pygame.display.flip()
