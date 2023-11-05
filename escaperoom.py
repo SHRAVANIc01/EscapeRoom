@@ -22,6 +22,16 @@ class SpriteSheet:
         image.set_colorkey(color)
 
         return image
+    
+def solveKnapsackProblem(W, wt, val, n):
+    if n == 0 or W == 0:
+        return 0
+    
+    if wt[n-1] > W:
+        return solveKnapsackProblem(W, wt, val, n-1)
+    
+    else:
+        return max(val[n-1] + solveKnapsackProblem(W-wt[n-1], wt, val, n-1), solveKnapsackProblem(W, wt, val, n-1))
 
 
 class Player:
@@ -89,50 +99,51 @@ player.manageAnimations()
 weight_sum = 0
 
 # Game loop
-running = True
-while running:
-    dt = clock.tick(60)/1000.0
+if __name__ == '__main__':
+    running = True
+    while running:
+        dt = clock.tick(60)/1000.0
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-    # Check for player input
-    frame = player.updateAnimations(dt)
-    keys = pygame.key.get_pressed()
-    player.playerMovement(keys)
+        # Check for player input
+        frame = player.updateAnimations(dt)
+        keys = pygame.key.get_pressed()
+        player.playerMovement(keys)
 
-    # Check for treasure collection
-    for treasure in treasures:
-        if pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE).colliderect(pygame.Rect(treasure["x"], treasure["y"], TREASURE_SIZE, TREASURE_SIZE)):
-            collected_treasures.append(treasure)
-            weight_sum += treasure['weight']
-            treasures.remove(treasure)
+        # Check for treasure collection
+        for treasure in treasures:
+            if pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE).colliderect(pygame.Rect(treasure["x"], treasure["y"], TREASURE_SIZE, TREASURE_SIZE)):
+                collected_treasures.append(treasure)
+                weight_sum += treasure['weight']
+                treasures.remove(treasure)
 
-    # Clear the screen
-    screen.fill(WHITE)
+        # Clear the screen
+        screen.fill(WHITE)
 
-    if weight_sum == 120:
-        wintxt = font.render("Game Won", True, (0,0,0))
-        screen.blit(wintxt, (10, 10))
+        if weight_sum == 120:
+            wintxt = font.render("Game Won", True, (0,0,0))
+            screen.blit(wintxt, (10, 10))
 
-    # Draw the player
-    # pygame.draw.rect(screen, (0, 0, 255), pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE))
-    screen.blit(frame, (player.player_x,player.player_y))
+        # Draw the player
+        # pygame.draw.rect(screen, (0, 0, 255), pygame.Rect(player.player_x, player.player_y, PLAYER_SIZE, PLAYER_SIZE))
+        screen.blit(frame, (player.player_x,player.player_y))
 
-    # Draw the treasures
-    for treasure in treasures:
-        w = treasure['weight']
-        weighttext = font.render(str(w),False,(0,0,0))
-        pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(treasure["x"], treasure["y"], TREASURE_SIZE, TREASURE_SIZE))
-        screen.blit(weighttext, (treasure["x"], treasure["y"])) 
+        # Draw the treasures
+        for treasure in treasures:
+            w = treasure['weight']
+            weighttext = font.render(str(w),False,(0,0,0))
+            pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(treasure["x"], treasure["y"], TREASURE_SIZE, TREASURE_SIZE))
+            screen.blit(weighttext, (treasure["x"], treasure["y"])) 
 
-    # Draw collected treasures
-    # text = font.render("Collected Treasures: " + str(len(collected_treasures)), True, (0, 0, 0))
-    # screen.blit(text, (10, 10))
+        # Draw collected treasures
+        # text = font.render("Collected Treasures: " + str(len(collected_treasures)), True, (0, 0, 0))
+        # screen.blit(text, (10, 10))
 
-    # Update the display
-    pygame.display.flip()
+        # Update the display
+        pygame.display.flip()
 
-# Quit Pygame
-pygame.quit()
+    # Quit Pygame
+    pygame.quit()
